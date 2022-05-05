@@ -104,6 +104,9 @@ data$Lat_Lon
 revgeocode(data$Lat_Lon, output="more")
 ```
 
+
+
+***Update visuals***
 ```{r}
 
 annual_incident_prct
@@ -111,12 +114,12 @@ annual_incident_prct
 ggplot(data=annual_incident_prct, aes(x=Year, y=incident)) + geom_col()
 
 
-ggplot(data=annual_incident_prct, aes(x=Year, y=incident, fill=incident)) + geom_bar(stat="identity") + labs(x = "New x label") 
-
+ggplot(data=annual_incident_prct, aes(x=Year, y=incident, fill=incident)) + geom_bar(stat="identity") + geom_text(aes(label = incident, y = incident), size = 3, position = position_stack(vjust = 1.05)) + labs(x = "Year", y="Num of Incidents Reported") 
 
 ```
 
-
+***figure out way to best scale this ratio
+***update visuals
 ```{r}
 
 annual_incident = data %>%
@@ -138,5 +141,38 @@ ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + ge
 
 ```
 
+```{r}
+dim(data) #74513
 
+data = data %>%
+  filter(!is.na(BORO_NM)) 
+dim(data) #74447
+
+boro_incident = data %>%
+  group_by(Year, BORO_NM) %>%
+  summarise(incident = n())
+boro_incident
+
+```
+
+```{r}
+
+boro_ridership = read.csv("ridership_annual_boro.csv", na.strings=c(""," ","NA"))
+boro_ridership$Year = as.character(boro_ridership$Year)
+boro_ridership$BORO_NM = toupper(boro_ridership$BORO_NM)
+
+boro_ridership
+
+df_boro = merge(boro_ridership, boro_incident, by=c("Year","BORO_NM"))
+
+df_boro = df_boro %>%
+  mutate(incident_prcnt = incident/Ridership)
+
+df_boro
+
+
+ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line()
+
+
+```
 
