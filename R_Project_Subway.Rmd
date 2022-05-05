@@ -187,7 +187,7 @@ ridership
 ```{r}
 df_boro
 
-ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line()
+ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line() + ylim(0,0.0025)
 
 
 ```
@@ -224,12 +224,67 @@ law_cat_year = data %>%
   summarise(count=n())
 
 
-ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity")
-
-law_cat_year %>%
+law_cat_year = law_cat_year %>%
   group_by(Year) %>%
   mutate(Total=sum(count)) %>%
-  mutate(count/Total*100)
+  mutate(Prct = paste0( round(count/Total*100),"%" ) )
+  
+
+law_cat_year
 
 ```
+
+```{r}
+ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity")
+
+ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 3)
+
+```
+
+
+```{r}
+
+boro_law =data %>%
+  group_by(Year, BORO_NM, LAW_CAT_CD) %>%
+  summarise(count=n())
+
+boro_law %>%
+  group_by(Year) %>%
+  mutate(Total=sum(count)) %>%
+  mutate(Prct = paste0( round(count/Total*100),"%" ) )
+
+ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_wrap(vars(BORO_NM)) #facet_grid(cols=vars(drv))
+
+```
+
+
+
+
+```{r}
+
+unique(data$OFNS_DESC)
+
+
+data %>%
+  group_by(LAW_CAT_CD, OFNS_DESC) %>%
+  summarise(counts = n()) %>%
+  arrange(LAW_CAT_CD, desc(counts))
+  
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
