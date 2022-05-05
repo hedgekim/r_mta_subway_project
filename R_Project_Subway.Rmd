@@ -155,6 +155,7 @@ boro_incident
 
 ```
 
+
 ```{r}
 
 boro_ridership = read.csv("ridership_annual_boro.csv", na.strings=c(""," ","NA"))
@@ -170,9 +171,30 @@ df_boro = df_boro %>%
 
 df_boro
 
+```
+
+
+
+*** come up with a better scale
+```{r}
+ggplot(data=ridership, aes(x=Year, y=annual_ridership, fill=annual_ridership)) + geom_bar(stat="identity") + geom_text(aes(label = annual_ridership, y = annual_ridership), size = 2, position = position_stack(vjust = 1.05)) + labs(x = "Year", y="Ridership") 
+
+ridership
+
+```
+
+
+```{r}
+
 
 ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line()
 
 
+```
+
+
+
+```{r}
+unique(data$OFNS_DESC)
 ```
 
