@@ -134,10 +134,10 @@ options(scipen = 999)
 annual_incident_prct = inner_join(annual_incident, ridership, by="Year")
 annual_incident_prct
 annual_incident_prct = annual_incident_prct %>%
-  mutate(incident_prcnt = incident/annual_ridership)
+  mutate(incident_prcnt = incident/annual_ridership*100)
 
 annual_incident_prct
-ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + geom_line()
+ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + geom_line() + ylim(0,0.0025)
 
 ```
 
@@ -167,7 +167,7 @@ boro_ridership
 df_boro = merge(boro_ridership, boro_incident, by=c("Year","BORO_NM"))
 
 df_boro = df_boro %>%
-  mutate(incident_prcnt = incident/Ridership)
+  mutate(incident_prcnt = incident/Ridership*100)
 
 df_boro
 
@@ -185,7 +185,7 @@ ridership
 
 
 ```{r}
-
+df_boro
 
 ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line()
 
@@ -196,5 +196,40 @@ ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_N
 
 ```{r}
 unique(data$OFNS_DESC)
+
+#update NA offense defense with PD_DESC
+data$OFNS_DESC <- ifelse(is.na(data$OFNS_DESC), data$PD_DESC, data$OFNS_DESC)
+
+data %>%
+  filter(is.na(LAW_CAT_CD))
+
+unique(data$OFNS_DESC)
+
+data %>%
+  group_by(OFNS_DESC) %>%
+  summarise(counts=n()) %>%
+  arrange(desc(counts))
+
+
+data %>%
+  filter(Year == 2021) %>%
+  group_by(STATION_NAME) %>%
+  summarise(counts=n()) %>%
+  arrange(desc(counts))
+
+
+
+law_cat_year = data %>%
+  group_by(Year, LAW_CAT_CD) %>%
+  summarise(count=n())
+
+
+ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity")
+
+law_cat_year %>%
+  group_by(Year) %>%
+  mutate(Total=sum(count)) %>%
+  mutate(count/Total*100)
+
 ```
 
