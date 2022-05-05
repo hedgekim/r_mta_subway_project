@@ -1,0 +1,142 @@
+---
+title: "R_Project"
+output: html_document
+date: '2022-05-04'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+```
+
+
+```{r}
+
+data1 <- read.csv("NYPD_Complaint_Data_Historic.csv", na.strings=c(""," ","NA"))
+data2 <- read.csv("NYPD_Complaint_Data_Current_Year_To_Date.csv", na.strings=c(""," ","NA"))
+
+# remove unneccessary columns
+data1 = data1 %>%
+  select(c(1:3,8:14, 16, 24:30, 32:35))
+
+#remove and reorder so it matches above df
+data2 = data2 %>%
+  select(c(1, 4, 5, 13, 16, 19, 20, 8, 14, 3, 21, 24:27,33:35, 23, 28:30 ))
+
+v1 == v2
+
+dim(data1) #160448
+dim(data2) #8843
+
+#combine into one datafram
+data = rbind(data1, data2)
+
+dim(data) #169291
+
+data = data[!duplicated(data), ]
+
+```
+
+
+Ridership Dataset
+```{r}
+#annual data from: https://new.mta.info/agency/new-york-city-transit/subway-bus-ridership-2020
+
+#total for 2021 
+
+Year = c(2015:2021)
+annual_ridership = c(1762565419, 1756814800, 1727366607, 1680060402, 1697787002, 639541029, 761142069)
+
+#below data is from march 2020 - May 2022
+data3 <- read.csv("MTA_Daily_Ridership_Data_Beginning_2020.csv", na.strings=c(""," ","NA"))
+head(data3$Date)
+
+data3$Date = as.Date(data3$Date, format="%m/%d/%Y")
+data3$Year = format(data3$Date, format="%Y")
+
+#get annual data for 2021
+data3 %>%
+  group_by(Year) %>%
+  summarise(sum(Subways..Total.Estimated.Ridership))
+
+ridership = data.frame(Year, annual_ridership)
+ridership
+```
+
+
+
+
+```{r}
+# convert date columns to date types
+# create a year, month column from date
+
+data$CMPLNT_FR_DT = as.Date(data$CMPLNT_FR_DT, format="%m/%d/%Y")
+class(data$CMPLNT_FR_DT)
+
+data$Year = format(data$CMPLNT_FR_DT, format="%Y")
+data$Year_Month = format(data$CMPLNT_FR_DT, format="%Y-%m")
+dim(data)
+# as.POSIXct(data$CMPLNT_FR_TM, format= "%H:%M")
+
+
+```
+
+
+*** revisit ***
+```{r}
+
+#how can i fill in empty zip code with lat long data?
+
+sapply(data, function(x) sum(is.na(x)))
+
+data %>%
+  filter(is.na(BORO_NM))
+
+library("ggmap")
+data$Lat_Lon
+revgeocode(data$Lat_Lon, output="more")
+```
+
+```{r}
+
+annual_incident_prct
+
+ggplot(data=annual_incident_prct, aes(x=Year, y=incident)) + geom_col()
+
+
+ggplot(data=annual_incident_prct, aes(x=Year, y=incident, fill=incident)) + geom_bar(stat="identity") + labs(x = "New x label") 
+
+
+```
+
+
+```{r}
+
+annual_incident = data %>%
+  group_by(Year) %>%
+  summarise(incident = n())
+
+data = data[!(data$Year %in% c('1016','1955', '1966', '1971', '1985', '1990', '2000', '2001', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', NA)), ]
+
+dim(data)
+options(scipen = 999)
+# ridership$Year = as.character(ridership$Year)
+annual_incident_prct = inner_join(annual_incident, ridership, by="Year")
+annual_incident_prct
+annual_incident_prct = annual_incident_prct %>%
+  mutate(incident_prcnt = incident/annual_ridership)
+
+annual_incident_prct
+ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + geom_line()
+
+```
+
+
+
