@@ -65,7 +65,7 @@ data3$Year = format(data3$Date, format="%Y")
 data3 %>%
   group_by(Year) %>%
   summarise(sum(Subways..Total.Estimated.Ridership))
-
+data3
 ridership = data.frame(Year, annual_ridership)
 ridership
 ```
@@ -99,9 +99,9 @@ sapply(data, function(x) sum(is.na(x)))
 data %>%
   filter(is.na(BORO_NM))
 
-library("ggmap")
-data$Lat_Lon
-revgeocode(data$Lat_Lon, output="more")
+# library("ggmap")
+# data$Lat_Lon
+# revgeocode(data$Lat_Lon, output="more")
 ```
 
 
@@ -129,13 +129,17 @@ data = data[!(data$Year %in% c('1016','1955', '1966', '1971', '1985', '1990', '2
 
 dim(data)
 options(scipen = 999)
-# ridership$Year = as.character(ridership$Year)
+ridership$Year = as.character(ridership$Year)
 annual_incident_prct = inner_join(annual_incident, ridership, by="Year")
 annual_incident_prct
 annual_incident_prct = annual_incident_prct %>%
   mutate(incident_prcnt = incident/annual_ridership*100)
 
 annual_incident_prct
+
+
+#2020 Ridership by borough/station data: https://new.mta.info/agency/new-york-city-transit/subway-bus-ridership-2020
+
 ```
 
 ***update visuals***
@@ -312,11 +316,7 @@ data %>%
 
 # top 5 crimes for each borough in past years have been 1)CRIMINAL MISCHIEF & RELATED OF 2)GRAND LARCENY 3)FORGERY 4)ASSAULT 3 & RELATED OFFENSES 5)HARRASSMENT 2
 # except for queens Robbery instead of Forgery
-data %>%
-  filter(Year == 2021) %>%
-  group_by(STATION_NAME) %>%
-  summarise(counts=n()) %>%
-  arrange(desc(counts))
+
 ```
 
 
@@ -347,21 +347,33 @@ Mapping for top 5 stations with incidents for each year
 ***need to complete***
 ```{r}
 
-data %>%
-  filter(BORO_NM == "MANHATTAN") %>%
-  group_by(Year, STATION_NAME) %>%
-  summarise(count=n()) %>%
-  top_n(10) %>%
-  arrange(Year,desc(count))
+# data %>%
+#   filter(BORO_NM == "MANHATTAN") %>%
+#   group_by(Year, STATION_NAME) %>%
+#   summarise(count=n()) %>%
+#   top_n(10) %>%
+#   arrange(Year,desc(count))
 
 top_manhattan_station = data %>%
   filter(BORO_NM == "MANHATTAN") %>%
-  group_by(Year, STATION_NAME) %>%
+  group_by(Year, Lat_Lon) %>%
   summarise(count=n()) %>%
   mutate(Total=sum(count)) %>%
   mutate(Prct=paste0( round(count/Total*100),"%" )) %>%
   arrange(Year, desc(count)) %>%
   do(head(., n = 5))
+top_manhattan_station
+
+
+data_lat_long = data %>%
+  group_by(STATION_NAME) %>%
+  select(Latitude, Longitude, Lat_Lon, TRANSIT_DISTRICT)
+data_lat_long
+
+left_join(top_manhattan_station, distinct(data_lat_long, Lat_Lon), by="Lat_Lon")
+
+
+
 
 #test of leaflet mapping with test codes
 library(leaflet)
@@ -379,7 +391,7 @@ dfr
 
 leaflet(data=dfr) %>%
   addTiles() %>%
-  addMarkers() %>%
+  addMarkers()
   
   
 leaflet(data=dfr) %>%
@@ -394,9 +406,108 @@ leaflet(data=dfr) %>%
 
 
 
+```{r}
+
+dim(data)
+data %>%
+  filter(BORO_NM == "MANHATTAN") %>%
+  group_by(STATION_NAME, Lat_Lon) %>%
+  summarise(n())
+
+
+length(unique(data$STATION_NAME))
+
+data_clean = data %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "1 AVENUE", "(40.73137039, -73.982563257)", Lat_Lon))
+data_clean = data %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "1 AVENUE", "(40.73137039, -73.982563257)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "103 STREET" & (Lat_Lon %in% c("(40.789260224, -73.947710001)",	"(40.78926022400003, -73.94771000099996)", 	"(40.796571143000044, -73.96718568699998)", "(40.79032242500005, -73.94768749799994)" )), "(40.790322425, -73.947687498)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "103 STREET" & (Lat_Lon %in% c("(40.796119229, -73.961443369)", "(40.796119229000055, -73.96144336899994)", "(40.796571143, -73.967185687)")), "(40.796119229, -73.961443369)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "103 STREET" & (Lat_Lon %in% c( "(40.79911039400002, -73.96854247999994)", "(40.799118632, -73.968556923)", 	"(40.799118632000045, -73.96855692299994)" )), "(40.799118632, -73.968556923)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "110 ST.-CATHEDRAL PKWY." & (Lat_Lon %in% c( "(40.79607431300008, -73.96706674599994)", "(40.796571143, -73.967185687)", 	"(40.796571143000044, -73.96718568699998)", "(40.80056181400005, -73.95819730799997)" )), "(40.800561814, -73.958197308)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "110 ST.-CATHEDRAL PKWY." & (Lat_Lon %in% c( "(40.80417664400005, -73.96670152799999)", "(40.814850289, -73.956681848)")), "(40.804176644, -73.966701528)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "110 ST.-CENTRAL PARK NORTH", "(40.798841208, -73.952018585)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "110 STREET", "(40.79481676, -73.944408254)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "116 ST.-COLUMBIA UNIVERSITY", "(40.808012927, -73.963903684)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "116 STREET" & (Lat_Lon %in% c( "(40.79481676, -73.944408254)", "(40.798630555000045, -73.94162037399997)", "(40.79863330000006, -73.94162037099994)", "(40.800694331, -73.941109286)", "(40.800694331000045, -73.94110928599997)")), "(40.7986333, -73.941620371)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "116 STREET" & (Lat_Lon %in% c( "(40.80203233000003, -73.94968294499995)")), "(40.80203233, -73.949682945)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "116 STREET" & !(Lat_Lon %in% c("(40.7986333, -73.941620371)", "(40.80203233, -73.949682945)")), "(40.804428073, -73.95537021)", Lat_Lon))
+
+  
+  # mutate(Lat_Lon = ifelse(STATION_NAME == "116 STREET" & (Lat_Lon %in% c( "(40.80323023600005, -73.95252472099996)", "	(40.80442807300005, -73.95537020999996)", "(40.808012927, -73.963903684)", "(40.808749904, -73.952585806)", "(40.80874990400008, -73.95258580599993)")), "(40.804428073, -73.95537021)", Lat_Lon))
+
+
+data_clean = data_clean %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "125 STREET" & (Lat_Lon %in% c("(40.804384046000045, -73.93742166899995)","(40.800694331, -73.941109286)", "(40.800694331000045, -73.94110928599997)")), "(40.804384046, -73.937421669)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "125 STREET" & (Lat_Lon %in% c("(40.807780622000045, -73.94548472699995)")), "(40.807780622, -73.945484727)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "125 STREET" & (Lat_Lon %in% c("(40.81077276700007, -73.95259158999993)")), "(40.810772767, -73.95259159)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "125 STREET" & (Lat_Lon %in% c("(40.814850289, -73.956681848)", "(40.81485028900005, -73.95668184799997)", "(40.815696257, -73.958292572)", "(40.81569625700007, -73.95829257199993)", "(40.81569900300008, -73.95829618299997)", "(40.81573205300003, -73.94542041099999)")), "(40.815696257, -73.958292572)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "135 STREET" & (Lat_Lon %in% c("(40.81411316100008, -73.94085536499993)")), "(40.814113161, -73.940855365)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "135 STREET" & (Lat_Lon %in% c("(40.81712482300003, -73.94800964599993)")), "(40.817124823, -73.948009646)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "137 ST.-CITY COLLEGE", "(40.821392719, -73.954141241)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "14 ST.-UNION SQUARE", "(40.737203099, -73.983272598)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "14 STREET" & (Lat_Lon %in% c("(40.73444264900007, -73.98990537699996)")), "(40.737203099, -73.983272598)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "42 ST.-TIMES SQUARE", "(40.756043535, -73.986949544)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "42 STREET", "(40.754849215, -73.984119991)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "14 STREET" & (Lat_Lon %in% c("(40.737368955, -73.996840424)", "(40.73736895500008, -73.99684042399997)", "(40.738560221, -73.999683896)", "(40.73856022100006, -73.99968389599996)", "\t(40.738560221, -73.999683896)")), "(40.738560221, -73.999683896)", Lat_Lon)) %>%
+  
+  mutate(Lat_Lon = ifelse(STATION_NAME == "42 ST.-GRAND CENTRAL", "(40.751449824, -73.976050545)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "34 ST.-HERALD SQ.", "(40.749780113, -73.987780874)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "34 ST.-PENN STATION", "(40.750999048, -73.990624712)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "34 STREET", "(40.749780113, -73.987780874)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "42 ST.-PORT AUTHORITY BUS TERM", "(40.757240531000036, -73.98979363699993)", Lat_Lon))
+
+
+data_clean %>%
+  filter(BORO_NM == "MANHATTAN") %>%
+  filter(Year == 2021) %>%
+  group_by(STATION_NAME, Lat_Lon) %>%
+  summarise(total = n())
+
+data_clean
+
+```
 
 
 
+```{r}
+
+# Clean Lat_Lon data only for the top 10 and 10 lowest stations
+
+
+data_m_top = data %>% #times square/port authority
+  mutate(STATION_NAME = recode(STATION_NAME, "42 ST.-PORT AUTHORITY BUS TERM" = "42 ST.-TIMES SQUARE/PORT AUTHORITY", "42 ST.-TIMES SQUARE" = "42 ST.-TIMES SQUARE/PORT AUTHORITY")) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "42 ST.-TIMES SQUARE/PORT AUTHORITY", "(40.75604353500006, -73.98694954399997)", Lat_Lon)) %>% #group grand central coordinates
+  mutate(Lat_Lon = ifelse(STATION_NAME == "42 ST.-GRAND CENTRAL", "(40.751449824000076, -73.97605054499998)", Lat_Lon)) %>% #group Herald Square Coordinates
+  mutate(Lat_Lon = ifelse(STATION_NAME == "34 ST.-HERALD SQ.", "(40.749796581000055, -73.98777004399994)", Lat_Lon))
+
+
+
+
+
+  mutate(Lat_Lon = ifelse(STATION_NAME == "1 AVENUE", "(40.73137039, -73.982563257)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "103 STREET" & (Lat_Lon %in% c("(40.789260224, -73.947710001)",	"(40.78926022400003, -73.94771000099996)", 	"(40.796571143000044, -73.96718568699998)", "(40.79032242500005, -73.94768749799994)" )), "(40.790322425, -73.947687498)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "103 STREET" & (Lat_Lon %in% c("(40.796119229, -73.961443369)", "(40.796119229000055, -73.96144336899994)", "(40.796571143, -73.967185687)")), "(40.796119229, -73.961443369)", Lat_Lon)) %>%
+  mutate(Lat_Lon = ifelse(STATION_NAME == "103 STREET" & (Lat_Lon %in% c( "(40.79911039400002, -73.96854247999994)", "(40.799118632, -73.968556923)", 	"(40.799118632000045, -73.96855692299994)" )), "(40.799118632, -73.968556923)", Lat_Lon))
+
+
+data_m_top %>%
+  filter(BORO_NM == "MANHATTAN") %>%
+  filter(Year == 2021) %>%
+  group_by(STATION_NAME, Lat_Lon) %>%
+  summarise(total = n())
+
+
+
+```
 
 
 
