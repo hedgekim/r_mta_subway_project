@@ -270,7 +270,7 @@ Across all boroughs, distribution of misdemeanors increased slightly
 ```{r}
 ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_wrap(vars(BORO_NM)) + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 1.5) #facet_grid(cols=vars(drv))
 
-ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_grid(.~BORO_NM) + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 2) #facet_grid(cols=vars(drv))
+ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_grid(.~BORO_NM) + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 2) + theme(axis.text.x = element_text(angle=90, hjust=1))  #facet_grid(cols=vars(drv))
 
 # Manhattan only
 # ggplot(data=boro_law_m, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 3)
@@ -364,18 +364,21 @@ top_manhattan_station = data %>%
   do(head(., n = 5))
 top_manhattan_station
 
-
 data_lat_long = data %>%
-  group_by(STATION_NAME) %>%
-  select(Latitude, Longitude, Lat_Lon, TRANSIT_DISTRICT)
-data_lat_long
+  distinct(Lat_Lon, .keep_all= TRUE) %>%
+  select(Latitude, Longitude, Lat_Lon, TRANSIT_DISTRICT, STATION_NAME)
 
-left_join(top_manhattan_station, distinct(data_lat_long, Lat_Lon), by="Lat_Lon")
+top_manhattan_station_21 = left_join(top_manhattan_station, data_lat_long,by="Lat_Lon", all.=FALSE)
 
+top_manhattan_station_19 = left_join(top_manhattan_station, data_lat_long,by="Lat_Lon", all.=FALSE)
 
+top_manhattan_station_21 = top_manhattan_station_21 %>%
+  filter(Year == 2021)
 
+top_manhattan_station_19 = top_manhattan_station_19 %>%
+  filter(Year == 2019)
 
-#test of leaflet mapping with test codes
+#test of leaflet mapping with test codes#
 library(leaflet)
 station = c("station1", "station2", "station3")
 lat = c(40.74830)
@@ -385,22 +388,69 @@ dfr$long = as.numeric(dfr$long)
 dfr$lat = as.numeric(dfr$lat)
 dfr
 
-
-
-
-
 leaflet(data=dfr) %>%
   addTiles() %>%
   addMarkers()
-  
   
 leaflet(data=dfr) %>%
   addTiles() %>%
   setView(-74.00, 40.71, zoom = 12) %>%
   addProviderTiles("CartoDB.Positron") %>%
   addMarkers()
+#####################
 
 
+
+leaflet(data=top_manhattan_station_21) %>%
+  addTiles() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addMarkers(
+    lng = -73.990, lat = 40.757,
+    label = "42 ST.-PORT AUTHORITY BUS TERM",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.987, lat = 40.756,
+    label = "42 ST.-TIMES SQUARE",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.937, lat = 40.804,
+    label = "125 STREET",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.945, lat = 40.808,
+    label = "125 STREET",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.991, lat = 40.751,
+    label = "34 ST.-PENN STATION",
+    labelOptions = labelOptions(noHide = T))
+
+leaflet(data=top_manhattan_station_19) %>%
+  addTiles() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  # addCircleMarkers() %>%
+  addMarkers(
+    lng = -73.990, lat = 40.757,
+    label = "42 ST.-PORT AUTHORITY BUS TERM",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.937, lat = 40.804,
+    label = "125 STREET",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.983, lat = 40.737,
+    label = "14 ST.-UNION SQUARE",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.953, lat = 40.811,
+    label = "125 STREET",
+    labelOptions = labelOptions(noHide = T)) %>%
+    addMarkers(
+    lng = -73.988	, lat = 40.748,
+    label = "34 STREET",
+    labelOptions = labelOptions(noHide = T))
+
+top_manhattan_station_21
 
 ```
 
