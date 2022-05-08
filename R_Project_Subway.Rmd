@@ -135,6 +135,8 @@ annual_incident_prct
 annual_incident_prct = annual_incident_prct %>%
   mutate(incident_prcnt = incident/annual_ridership*100)
 
+
+
 annual_incident_prct
 (0.0011148620-0.0006991454)/0.0006991454
 
@@ -146,7 +148,7 @@ annual_incident_prct
 
 This graph shows that there is an increase of subway crime in the past 2 years relative to the amount of people who are using the subway
 ```{r}
-ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + geom_line() + ylim(0.0005,0.0015)
+ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + geom_line(color="red") + ylim(0.0005,0.0015) + labs(x = "\nYear", y="Incident Per Rider\n")
 ```
 
 
@@ -206,8 +208,7 @@ This graph shows that there is an increase of subway crime in the past 2 years r
 ```{r}
 df_boro
 
-ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line() + ylim(0,0.0025)
-
+ggplot(data = df_boro, aes(x=Year, y=incident_prcnt, group=BORO_NM, color=BORO_NM)) + geom_line() + ylim(0,0.0025) + scale_color_manual(values=c("#097969", "blue", "red", "orange")) + labs(x = "\nYear", y="Incident per Rider\n")
 
 ```
 
@@ -234,7 +235,7 @@ Distribution of level of crimes per year per total volume
 ```{r}
 ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity")
 
-ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 3)
+ggplot(data=law_cat_year, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 3) + labs(x = "\nYear", y="Count of Incidents\n", fill="Incident Type")
 
 ```
 
@@ -273,7 +274,7 @@ Across all boroughs, distribution of misdemeanors increased slightly
 ```{r}
 ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_wrap(vars(BORO_NM)) + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 1.5) #facet_grid(cols=vars(drv))
 
-ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_grid(.~BORO_NM) + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 2) + theme(axis.text.x = element_text(angle=90, hjust=1))  #facet_grid(cols=vars(drv))
+ggplot(data=boro_law, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + facet_grid(.~BORO_NM) + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 2) + theme(axis.text.x = element_text(angle=90, hjust=1)) + labs(x = "\nYear", y="Count of Incidents\n", fill="Incident Type") #facet_grid(cols=vars(drv))
 
 # Manhattan only
 # ggplot(data=boro_law_m, aes(x=Year, y=count, fill=LAW_CAT_CD)) + geom_bar(stat="identity") + geom_text(aes(label=Prct), position = position_stack(vjust = 0.5), size = 3)
@@ -309,13 +310,14 @@ data %>%
 
 ***graphically show top 5 crimes somehow other than bar chart***
 ```{r}
-data %>%
+top_crimes = data %>%
   group_by(OFNS_DESC) %>%
   summarise(counts=n()) %>%
+  mutate(Prct=paste0( round(counts/74447*100),"%" )) %>%
   arrange(desc(counts)) %>%
-  top_n(5)
+  head(5)
   
-
+top_crimes
 
 # top 5 crimes for each borough in past years have been 1)CRIMINAL MISCHIEF & RELATED OF 2)GRAND LARCENY 3)FORGERY 4)ASSAULT 3 & RELATED OFFENSES 5)HARRASSMENT 2
 # except for queens Robbery instead of Forgery
@@ -571,6 +573,12 @@ data_m_top %>%
   group_by(STATION_NAME, Lat_Lon) %>%
   summarise(total = n())
 
+data %>%
+  filter(BORO_NM == "MANHATTAN") %>%
+  filter(Year == 2020) %>%
+  group_by(STATION_NAME, Lat_Lon) %>%
+  summarise(total = n())
+
 data_m_top = data_m_top %>%
   filter(BORO_NM == "MANHATTAN") %>%
   filter(Year == 2020) %>%
@@ -598,15 +606,27 @@ data_m_highlow = data_m_highlow %>%
 
 data_m_highlow %>%
   arrange(desc(Prct))
-
+data_m_highlow
 
 #%>%
   #ggplot(aes(x=RIDERSHIP, y=Prct)) + geom_point()
+options(ggrepel.max.overlaps = Inf)
+install.packages("ggrepel")
+library(ggrepel)
 
+ggplot(data = data_m_highlow, aes(x=RIDERSHIP, y=total)) + geom_point(aes(color = "red")) + scale_x_continuous(labels = comma) + labs(x = "\nAnnual Ridership Volume", y="Count of Incidents\n") + theme(legend.position="none")  + theme(legend.position="none")
 
-ggplot(data = data_m_highlow, aes(x=RIDERSHIP, y=total)) + geom_point()
+ggplot(data = data_m_highlow, aes(x=RIDERSHIP, y=total)) + geom_point(aes(color = "red")) + scale_x_continuous(labels = comma) + labs(x = "\nAnnual Ridership Volume", y="Count of Incidents\n") + theme(legend.position="none")  + theme(legend.position="none") + geom_label_repel(aes(label = STATION_NAME),
+                  box.padding   = 0.35, 
+                  point.padding = 0.5,
+                  size= 1.8,
+                  segment.color = 'grey50')
 
-ggplot(data = data_m_highlow, aes(x=RIDERSHIP, y=Prct)) + geom_point()
+ggplot(data = data_m_highlow, aes(x=RIDERSHIP, y=Prct)) + geom_point(aes(color = "red")) + scale_x_continuous(labels = comma) + labs(x = "\nAnnual Ridership Volume", y="% Incident per Ridership\n") + theme(legend.position="none") + geom_label_repel(aes(label = STATION_NAME),
+                  box.padding   = 0.35, 
+                  point.padding = 0.5,
+                  size= 1.8,
+                  segment.color = 'grey50')
 
 ```
 
