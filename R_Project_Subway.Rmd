@@ -115,7 +115,7 @@ annual_incident_prct
 ggplot(data=annual_incident_prct, aes(x=Year, y=incident)) + geom_col()
 
 
-ggplot(data=annual_incident_prct, aes(x=Year, y=incident, fill=incident)) + geom_bar(stat="identity") + geom_text(aes(label = incident, y = incident), size = 3, position = position_stack(vjust = 1.05)) + labs(x = "Year", y="Num of Incidents Reported") 
+ggplot(data=annual_incident_prct, aes(x=Year, y=incident, fill=incident)) + geom_bar(stat="identity", fill="white", color="red") + labs(x = "Year", y="Count of Incidents") + coord_flip() + expand_limits(y = 12500) + scale_y_continuous(labels = comma) #+ geom_text(aes(label = incident, y = incident), size = 3, position = position_stack(vjust = 1.05))
 
 ```
 
@@ -136,7 +136,7 @@ annual_incident_prct = annual_incident_prct %>%
   mutate(incident_prcnt = incident/annual_ridership*100)
 
 annual_incident_prct
-
+(0.0011148620-0.0006991454)/0.0006991454
 
 #2020 Ridership by borough/station data: https://new.mta.info/agency/new-york-city-transit/subway-bus-ridership-2020
 
@@ -192,7 +192,10 @@ df_boro
 ***come up with a better scale or way to represent these large numbers a better way/abbreviate***
 
 ```{r}
-ggplot(data=ridership, aes(x=Year, y=annual_ridership, fill=annual_ridership)) + geom_bar(stat="identity") + geom_text(aes(label = annual_ridership, y = annual_ridership), size = 2, position = position_stack(vjust = 1.05)) + labs(x = "Year", y="Ridership") 
+library(scales)
+class(ridership$annual_ridership)
+
+ggplot(data=ridership, aes(x=Year, y=annual_ridership, fill=annual_ridership)) + geom_bar(stat="identity", fill="white", color="blue") + labs(x = "Year", y="Ridership") + coord_flip() + scale_y_continuous(labels = comma) #+ geom_text(aes(label = annual_ridership, y = annual_ridership), size = 3, position = position_stack(vjust = .5))
 
 ridership
 
