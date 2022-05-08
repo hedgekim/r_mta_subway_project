@@ -564,17 +564,18 @@ data_m_top = data %>%
   
 data_m_top %>%
   filter(BORO_NM == "MANHATTAN") %>%
-  filter(Year == 2021) %>%
+  filter(Year == 2020) %>%
   group_by(STATION_NAME, Lat_Lon) %>%
-  summarise(total = n()) 
+  summarise(total = n())
 
 data_m_top = data_m_top %>%
   filter(BORO_NM == "MANHATTAN") %>%
-  filter(Year == 2021) %>%
+  filter(Year == 2020) %>%
   filter(STATION_NAME %in% c("42 ST.-TIMES SQUARE/PORT AUTHORITY", "42 ST.-GRAND CENTRAL", "34 ST.-HERALD SQ.", "14 ST.-UNION SQUARE", "FULTON STREET", "34 ST.-PENN STATION", "59 ST.-COLUMBUS CIRCLE", "LEXINGTON AVE/59 ST", "PARK PLACE", "CHAMBERS ST.-WORLD TRADE CENTE", "215 STREET", "155 STREET C", "155 STREET B/D", "145 STREET 3", "BOWERY", "CITY HALL", "CANAL STREET 1", "191 STREET", "148 ST.-HARLEM", "FRANKLIN STREET", "47-50 STS./ROCKEFELLER CTR.")) %>%
   group_by(STATION_NAME, Lat_Lon) %>%
   summarise(total = n()) %>%
   arrange(desc(total))
+
 
 #Ridership data for the 20 stations above source https://new.mta.info/coronavirus/ridership
 
@@ -608,6 +609,64 @@ ggplot(data = data_m_highlow, aes(x=RIDERSHIP, y=Prct)) + geom_point()
 
 
 
+```{r}
+# install.packages("hms")
+
+substring(data$CMPLNT_FR_TM, 0,2)
+
+incidenttime_2021 = data %>%
+  mutate(Hour = substring(data$CMPLNT_FR_TM, 0,2)) %>%
+  filter(Year == "2021") %>%
+  group_by(Hour) %>%
+  summarise(Total = n())
 
 
+incidenttime_all = data %>%
+  mutate(Hour = substring(data$CMPLNT_FR_TM, 0,2)) %>%
+  group_by(Year, Hour) %>%
+  summarise(Total = n())
+
+ggplot(data = incidenttime_all, aes(x=Hour, y=Total, group=Year, color=Year)) + geom_line()
+
+incidenttime_2021
+
+ggplot(data = incidenttime_2021, aes(x=Hour, y=Total, group=1)) + geom_line()
+ggplot(data = annual_incident_prct, aes(x=Year, y=incident_prcnt, group=1)) + geom_line() + ylim(0.0005,0.0015)
+```
+
+
+```{r}
+
+#impact of ridership before, during, after week of 4/12 shooting on subway
+ridership_incident1 = data3 %>%
+  select(1:2) %>%
+  filter(Date >= "2022-04-5" & Date <= "2022-04-25") %>%
+  mutate(Week = case_when(
+    Date >= "2022-04-5" & Date <= "2022-04-11" ~ "Week Before",
+    Date >= "2022-04-12" & Date <= "2022-04-18" ~ "Week Of",
+    Date >= "2022-04-19" & Date <= "2022-04-25" ~ "Week After"
+    ))
+
+ridership_incident1
+ridership_incident1$Week = factor(ridership_incident1$Week, c("Week Before", "Week Of", "Week After"))
+ggplot(data = ridership_incident1, aes(x = Week, Subways..Total.Estimated.Ridership, y = Subways..Total.Estimated.Ridership)) + geom_boxplot()
+```
+
+```{r}
+
+#impact of ridership before, during, after week of 1/15 incident
+ridership_incident2 = data3 %>%
+  select(1:2) %>%
+  filter(Date >= "2022-01-8" & Date <= "2022-01-28") %>%
+  mutate(Week = case_when(
+    Date >= "2022-01-8" & Date <= "2022-01-14" ~ "Week Before",
+    Date >= "2022-01-15" & Date <= "2022-01-21" ~ "Week Of",
+    Date >= "2022-01-22" & Date <= "2022-01-28" ~ "Week After"
+    ))
+
+ridership_incident2$Week = factor(ridership_incident2$Week, c("Week Before", "Week Of", "Week After"))
+ggplot(data = ridership_incident2, aes(x = Week, Subways..Total.Estimated.Ridership, y = Subways..Total.Estimated.Ridership)) + geom_boxplot()
+
+ridership_incident2
+```
 
