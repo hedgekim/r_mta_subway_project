@@ -117,6 +117,8 @@ ggplot(data=annual_incident_prct, aes(x=Year, y=incident)) + geom_col()
 
 ggplot(data=annual_incident_prct, aes(x=Year, y=incident, fill=incident)) + geom_bar(stat="identity", fill="white", color="red") + labs(x = "Year", y="Count of Incidents") + coord_flip() + expand_limits(y = 12500) + scale_y_continuous(labels = comma) #+ geom_text(aes(label = incident, y = incident), size = 3, position = position_stack(vjust = 1.05))
 
+
+
 ```
 
 ```{r}
@@ -649,7 +651,7 @@ incidenttime_all = data %>%
   group_by(Year, Hour) %>%
   summarise(Total = n())
 
-ggplot(data = incidenttime_all, aes(x=Hour, y=Total, group=Year, color=Year)) + geom_line()
+ggplot(data = incidenttime_all, aes(x=Hour, y=Total, group=Year, color=Year)) + geom_line() + labs(x = "\nHour of Day", y="% Count of Incidents\n")
 
 incidenttime_2021
 
@@ -672,7 +674,7 @@ ridership_incident1 = data3 %>%
 
 ridership_incident1
 ridership_incident1$Week = factor(ridership_incident1$Week, c("Week Before", "Week Of", "Week After"))
-ggplot(data = ridership_incident1, aes(x = Week, Subways..Total.Estimated.Ridership, y = Subways..Total.Estimated.Ridership)) + geom_boxplot()
+ggplot(data = ridership_incident1, aes(x = Week, Subways..Total.Estimated.Ridership, y = Subways..Total.Estimated.Ridership)) + geom_boxplot() + labs(x = "\nApril 12th Incident", y="Ridership Volume\n")
 ```
 
 ```{r}
@@ -688,7 +690,7 @@ ridership_incident2 = data3 %>%
     ))
 
 ridership_incident2$Week = factor(ridership_incident2$Week, c("Week Before", "Week Of", "Week After"))
-ggplot(data = ridership_incident2, aes(x = Week, Subways..Total.Estimated.Ridership, y = Subways..Total.Estimated.Ridership)) + geom_boxplot()
+ggplot(data = ridership_incident2, aes(x = Week, Subways..Total.Estimated.Ridership, y = Subways..Total.Estimated.Ridership)) + geom_boxplot() + labs(x = "\nJanuary 15th Incident", y="Ridership Volume\n")
 
 ridership_incident2
 ```
