@@ -1,4 +1,4 @@
-# r_project
+# R Exploratory Data Analysis Project - Subway Crimes
  
 This project looks at data around the rise of crime in nyc subways along with the decrease in ridership post-covid.
 
